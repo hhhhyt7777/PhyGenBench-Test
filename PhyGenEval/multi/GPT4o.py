@@ -177,7 +177,7 @@ def save_surrounding_frames(frames, scores, output_path):
 
 client = OpenAI(
     base_url='https://openrouter.ai/api/v1',
-    api_key='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',
+    api_key=,
 )
 
 pretrix = "Answer me in Format:{'Choice':'Yes or No','Reason':'the reason'} "
