@@ -15,7 +15,7 @@ import time
 
 client = OpenAI(
     base_url='https://openrouter.ai/api/v1',
-    api_key='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',
+    api_key=,
 )
 
 # We'll be using the OpenAI DevDay Keynote Recap video
