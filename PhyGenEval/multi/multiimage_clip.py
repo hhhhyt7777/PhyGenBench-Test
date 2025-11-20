@@ -201,108 +201,109 @@ pretrix = "Answer me in Format:{'Choice':'Yes or No','Reason':'the reason'} "
 with open('./PhyGenBench/multi_question.json','r') as f:
     data = json.load(f)
 
-directory = '/data/'
+directory = '/workspace/'
 
 
-modelname = 'phygen_ori_w8'
+modellist = ['phygen_r20'] #'phygen_w8','phygen_w11', 'phygen_w14', 'phygen_ori_w11', 'phygen_ori_w14'
 
 num_frames = 25  # 需要采样的帧数
 
 
 data = data
 
-result = []
-# for modelname in modelnames:
-
-video_directory = os.path.join(directory,modelname)
-
-if not os.path.exists(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname)):
-    os.makedirs(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname))
-for i in range(len(data)):
-    try:
-        T2V_prompt = data[i]["caption"]
-        Physical_law = data[i]["physical_laws"]
-        
-        video_path = os.path.join(video_directory,f'video_{i+1}.mp4')
-        retrieval_question = data[i]['multiimage_question']
-        retrieval_prompt = retrieval_question["Retrieval Prompt"]
-        question_prompt1 = retrieval_question["Description1"]
-        question_prompt2 = retrieval_question["Description2"]
-        # question_prompt3 = retrieval_question["Description3"]
-        
-        
-        output_first_image_path = os.path.join(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_first.jpg')
-        output_middle_image_path = os.path.join(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_middle.jpg')
-        output_last_image_path = os.path.join(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_last.jpg')
-
-
-        total_frames = get_video_frame_count(video_path)
-        print(f"Total frames in video: {total_frames}, {video_path}")
-
-        # 平均采样帧
-        sampled_frames = sample_frames(video_path, num_frames)
-
-        save_first_frame(video_path,output_first_image_path)
-        save_last_frame(video_path,output_last_image_path)
-
-        if retrieval_prompt == 'Middle Frame':
-            save_middle_frame(video_path,output_middle_image_path)
-
-
-        else:
-            scores = calculate_clip_scores(sampled_frames, retrieval_prompt)
-            # 保存最相似的帧
-            start_index, max_index, end_index = save_surrounding_frames(sampled_frames, scores, output_middle_image_path)
-            scores_res = []
-            cnt1 = 0
-            scores1 = []
-            for k in range(start_index, max_index+1):
-                
-                frame_output_path = f"{output_middle_image_path.split('.jpg')[0]}_frame_{k}.jpg"
-                image = [frame_output_path] # an image path in string format
-                text = [retrieval_prompt]
-                score = clip_flant5_score(images=image, texts=text)
-                score_re = score.item()
-                print('score_re: ',score_re, k)
-                data[i]["multiimage_question"][f"retrieval_1_{k}"] = score_re
-
-                print(f"retrieval_1_{k}")
-
-
-
-
-            cnt2 = 0
-            scores2 = []
-            for m in range(max_index, end_index):
-                
-                frame_output_path = f"{output_middle_image_path.split('.jpg')[0]}_frame_{m}.jpg"
-                image = [frame_output_path] # an image path in string format
-                text = [retrieval_prompt]
-                score2 = clip_flant5_score(images=image, texts=text)
-                score_re2 = score2.item()
-                data[i]["multiimage_question"][f"retrieval_2_{m}"] = score_re2
-
-                print('score_re2: ',score_re2, m)
-
-                print(f"retrieval_2_{m}")
-
-
-            data[i]["multiimage_question"]["CLIP_Index"] = f"{start_index},{max_index},{end_index}"
-            # data[i]["multiimage_question"]["GPT4o_1_Score"] = score1_final
-            # data[i]["multiimage_question"]["GPT4o_2_Score"] = score2_final
-        result.append(data[i])
-    except Exception as e:
-        print('Error: ', e)
-        result.append(data[i])
-
-
+for modelname in modellist:
+    result = []
+    # for modelname in modelnames:
     
-
+    video_directory = os.path.join(directory,modelname)
     
-
+    if not os.path.exists(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname)):
+        os.makedirs(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname))
+    for i in range(len(data)):
+        try:
+            T2V_prompt = data[i]["caption"]
+            Physical_law = data[i]["physical_laws"]
+            
+            video_path = os.path.join(video_directory,f'video_{i+1}.mp4')
+            retrieval_question = data[i]['multiimage_question']
+            retrieval_prompt = retrieval_question["Retrieval Prompt"]
+            question_prompt1 = retrieval_question["Description1"]
+            question_prompt2 = retrieval_question["Description2"]
+            # question_prompt3 = retrieval_question["Description3"]
+            
+            
+            output_first_image_path = os.path.join(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_first.jpg')
+            output_middle_image_path = os.path.join(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_middle.jpg')
+            output_last_image_path = os.path.join(os.path.join('./PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_last.jpg')
     
-    # break
-
-print(len(result))
-with open(f'./PhyGenEval/multi/prompt_replace_augment_multi_question1_{modelname}_res1_imageclip.json','w') as f:
-    json.dump(result,f)
+    
+            total_frames = get_video_frame_count(video_path)
+            print(f"Total frames in video: {total_frames}, {video_path}")
+    
+            # 平均采样帧
+            sampled_frames = sample_frames(video_path, num_frames)
+    
+            save_first_frame(video_path,output_first_image_path)
+            save_last_frame(video_path,output_last_image_path)
+    
+            if retrieval_prompt == 'Middle Frame':
+                save_middle_frame(video_path,output_middle_image_path)
+    
+    
+            else:
+                scores = calculate_clip_scores(sampled_frames, retrieval_prompt)
+                # 保存最相似的帧
+                start_index, max_index, end_index = save_surrounding_frames(sampled_frames, scores, output_middle_image_path)
+                scores_res = []
+                cnt1 = 0
+                scores1 = []
+                for k in range(start_index, max_index+1):
+                    
+                    frame_output_path = f"{output_middle_image_path.split('.jpg')[0]}_frame_{k}.jpg"
+                    image = [frame_output_path] # an image path in string format
+                    text = [retrieval_prompt]
+                    score = clip_flant5_score(images=image, texts=text)
+                    score_re = score.item()
+                    print('score_re: ',score_re, k)
+                    data[i]["multiimage_question"][f"retrieval_1_{k}"] = score_re
+    
+                    print(f"retrieval_1_{k}")
+    
+    
+    
+    
+                cnt2 = 0
+                scores2 = []
+                for m in range(max_index, end_index):
+                    
+                    frame_output_path = f"{output_middle_image_path.split('.jpg')[0]}_frame_{m}.jpg"
+                    image = [frame_output_path] # an image path in string format
+                    text = [retrieval_prompt]
+                    score2 = clip_flant5_score(images=image, texts=text)
+                    score_re2 = score2.item()
+                    data[i]["multiimage_question"][f"retrieval_2_{m}"] = score_re2
+    
+                    print('score_re2: ',score_re2, m)
+    
+                    print(f"retrieval_2_{m}")
+    
+    
+                data[i]["multiimage_question"]["CLIP_Index"] = f"{start_index},{max_index},{end_index}"
+                # data[i]["multiimage_question"]["GPT4o_1_Score"] = score1_final
+                # data[i]["multiimage_question"]["GPT4o_2_Score"] = score2_final
+            result.append(data[i])
+        except Exception as e:
+            print('Error: ', e)
+            result.append(data[i])
+    
+    
+        
+    
+        
+    
+        
+        # break
+    
+    print(len(result))
+    with open(f'./PhyGenEval/multi/prompt_replace_augment_multi_question1_{modelname}_res1_imageclip.json','w') as f:
+        json.dump(result,f)

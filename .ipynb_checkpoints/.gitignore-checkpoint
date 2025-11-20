@@ -1,0 +1,4 @@
+PhyBench-Videos/
+hf_cache/
+*.mp4
+t2v_metrics/

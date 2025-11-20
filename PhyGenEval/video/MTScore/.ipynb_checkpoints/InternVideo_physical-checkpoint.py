@@ -15,8 +15,8 @@ def parse_args():
     parser.add_argument('--model_names', nargs='+', default=["test"], help="Name of the models.")
     parser.add_argument("--input_folder", type=str, default="/data", help="Input folder containing videos")
     parser.add_argument("--output_folder", type=str, default="./", help="Output folder for saving scores")
-    parser.add_argument("--config_path", type=str, default='/workspace/PhyGenBench/PhyGenEval/video/MTScore/configs/internvideo2_stage2_config.py', help="Path to config file")
-    parser.add_argument("--model_pth", type=str, default='/data/InternVideo2/InternVideo2-stage2_1b-224p-f4.pt', help="Path to model checkpoint")
+    parser.add_argument("--config_path", type=str, default='/workspace/PhyGenBench-Test/PhyGenEval/video/MTScore/configs/internvideo2_stage2_config.py', help="Path to config file")
+    parser.add_argument("--model_pth", type=str, default='/workspace/InternVideo2-Stage2_1B-224p-f4/InternVideo2-stage2_1b-224p-f4.pt', help="Path to model checkpoint")
     parser.add_argument('--eval_type', type=int, choices=[150, 1649], default=150)
     return parser.parse_args()
 
@@ -77,10 +77,10 @@ def main():
     intern_model, tokenizer = retry_setup(config, 10, 2)
 
 
-    modelnames = ['phygen_w8', 'phygen_ori_w8']
+    modelnames = ['phygen_r20']
     
     for modelname in modelnames:
-        with open('/workspace/PhyGenBench/PhyGenBench/video_question.json','r') as f:
+        with open('/workspace/PhyGenBench-Test/PhyGenBench/video_question.json','r') as f:
             data = json.load(f)
 
 
@@ -97,7 +97,7 @@ def main():
 
             text_to_index = {text: index for index, text in enumerate(text_candidates)}
 
-            video_path = f'/data/{modelname}/video_{i+1}.mp4'
+            video_path = f'/workspace/{modelname}/video_{i+1}.mp4'
             texts, probs = calculate_video_score(video_path, text_to_index, text_candidates, intern_model, config)
 
             print(texts,probs)
@@ -120,7 +120,7 @@ def main():
 
 
         print(len(result))
-        with open(f'/workspace/PhyGenBench/PhyGenEval/video/prompt_replace_augment_video_question_{modelname}_res_intern.json','w') as f:
+        with open(f'/workspace/PhyGenBench-Test/PhyGenEval/video/prompt_replace_augment_video_question_{modelname}_res_intern.json','w') as f:
             json.dump(result,f)
 
     

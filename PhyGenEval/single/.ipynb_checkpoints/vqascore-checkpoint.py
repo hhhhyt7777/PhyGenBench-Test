@@ -110,135 +110,138 @@ with open('./PhyGenBench/single_question.json','r') as f:
 
 
 result = []
-directory = '/data/'
-modelname = 'phygen_ori_w8'
+directory = '/workspace/'
+modellist = ['phygen_r20'] #['phygen_w11', 'phygen_w14', 'phygen_ori_w11', 'phygen_ori_w14']
 
 num_frames = 25  # 需要采样的帧数
 
-video_directory = os.path.join(directory,modelname)
-if not os.path.exists(video_directory):
-    os.makedirs(video_directory)
+for modelname in modellist:
+    print(f'\n========== Processing model: {modelname} ==========')
 
-
-for i in range(len(data)):
-    video_path = os.path.join(video_directory,f'video_{i+1}.mp4')
-    retrieval_questions = data[i]['singleimage_question']
-    score_final_all = 0
-    score_final_all_discrete = 0
-    for j in range(len(retrieval_questions)):
-        retrieval_question = retrieval_questions[j]
-        retrieval_prompt = retrieval_question["Retrieval Prompt"]
-        question_prompt = retrieval_question["Statement"]
-        question_prompt_an = retrieval_question["Antonym"]
-
-       
-
-        output_image_path = os.path.join(os.path.join('./PhyBench-Videos/singleimage_clips',modelname),f'output_video_{i+1}_{j}.jpg')
-        # 获取视频总帧数
-        
-        total_frames = get_video_frame_count(video_path)
-        print(f"Total frames in video: {total_frames}")
-
-
-
-        # 平均采样帧
-        sampled_frames = sample_frames(video_path, num_frames)
-
-
-        if retrieval_prompt == 'Last Frame':
-            print('retrieval_prompt == Last Frame')
-            save_last_frame(video_path,output_image_path)
-
-
-            image = [output_image_path] # an image path in string format
-            text = [question_prompt]
-            score = clip_flant5_score(images=image, texts=text)
-            score1 = score.item()
-            score_re = 0
-            score_final = score1
-            score_final_all += score1
-
+    video_directory = os.path.join(directory,modelname)
+    if not os.path.exists(video_directory):
+        os.makedirs(video_directory)
+    
+    
+    for i in range(len(data)):
+        video_path = os.path.join(video_directory,f'video_{i+1}.mp4')
+        retrieval_questions = data[i]['singleimage_question']
+        score_final_all = 0
+        score_final_all_discrete = 0
+        for j in range(len(retrieval_questions)):
+            retrieval_question = retrieval_questions[j]
+            retrieval_prompt = retrieval_question["Retrieval Prompt"]
+            question_prompt = retrieval_question["Statement"]
+            question_prompt_an = retrieval_question["Antonym"]
+    
+           
+    
+            output_image_path = os.path.join(os.path.join('./PhyBench-Videos/singleimage_clips',modelname),f'output_video_{i+1}_{j}.jpg')
+            # 获取视频总帧数
             
-
-
-        else:
-            # 计算匹配分数
-            scores = calculate_clip_scores(sampled_frames, retrieval_prompt)
-            # 保存最相似的帧
-            end_index, start_index = save_surrounding_frames(sampled_frames, scores, output_image_path)
-            scores_res = []
-
-            for k in range(start_index, end_index):
-                frame_output_path = f"{output_image_path.split('.jpg')[0]}_frame_{k}.jpg"
-
-                
-                image = [frame_output_path] # an image path in string format
-                text = [retrieval_prompt]
-                score = clip_flant5_score(images=image, texts=text)
-                score_re = score.item()
-
-
-
-                image = [frame_output_path] # an image path in string format
+            total_frames = get_video_frame_count(video_path)
+            print(f"Total frames in video: {total_frames}")
+    
+    
+    
+            # 平均采样帧
+            sampled_frames = sample_frames(video_path, num_frames)
+    
+    
+            if retrieval_prompt == 'Last Frame':
+                print('retrieval_prompt == Last Frame')
+                save_last_frame(video_path,output_image_path)
+    
+    
+                image = [output_image_path] # an image path in string format
                 text = [question_prompt]
                 score = clip_flant5_score(images=image, texts=text)
                 score1 = score.item()
-
-
-                image = [frame_output_path] # an image path in string format
-                text = [question_prompt_an]
-                score = clip_flant5_score(images=image, texts=text)
-                score1_no = score.item()
-
-                print(question_prompt, score1, score1_no)
-                score1 = score1 / (score1 + score1_no)
-
-
-
-                score_res = score_re + score1
-
-                scores_res.append(score_res)
-            
-            score_final = max(scores_res)
-
-            score_final_all += score_final
-
-            data[i]['singleimage_question'][j]['clip_retrieval'] = score_re
-            
-
-
-        
-        
-
-
-        print(score_re, score1, modelname,f'output_video_{i+1}.mp4',question_prompt)
-
-        data[i]['singleimage_question'][j][modelname] = score_final
-
-        
-
+                score_re = 0
+                score_final = score1
+                score_final_all += score1
     
-    # only use for two-question
-    if score_final_all <= 1:
-        score_final_all_discrete = 0
-    elif score_final_all <= 1.5 and score_final_all > 1:
-        score_final_all_discrete = 1
-    elif score_final_all <= 2.25 and score_final_all > 1.5:
-        score_final_all_discrete = 2
-    elif score_final_all > 2.25:
-        score_final_all_discrete = 3
-
-
-    data[i][f'{modelname}_score'] = score_final_all
-    data[i][f'{modelname}_descrete'] = score_final_all_discrete
-
-    print(score_final_all_discrete,i)
-    result.append(data[i])
-
-print(len(result))
-
-with open(f'./PhyGenEval/single/prompt_replace_augment_single_question_{modelname}_res.json','w') as f:
-    json.dump(result,f)
+                
+    
+    
+            else:
+                # 计算匹配分数
+                scores = calculate_clip_scores(sampled_frames, retrieval_prompt)
+                # 保存最相似的帧
+                end_index, start_index = save_surrounding_frames(sampled_frames, scores, output_image_path)
+                scores_res = []
+    
+                for k in range(start_index, end_index):
+                    frame_output_path = f"{output_image_path.split('.jpg')[0]}_frame_{k}.jpg"
+    
+                    
+                    image = [frame_output_path] # an image path in string format
+                    text = [retrieval_prompt]
+                    score = clip_flant5_score(images=image, texts=text)
+                    score_re = score.item()
+    
+    
+    
+                    image = [frame_output_path] # an image path in string format
+                    text = [question_prompt]
+                    score = clip_flant5_score(images=image, texts=text)
+                    score1 = score.item()
+    
+    
+                    image = [frame_output_path] # an image path in string format
+                    text = [question_prompt_an]
+                    score = clip_flant5_score(images=image, texts=text)
+                    score1_no = score.item()
+    
+                    print(question_prompt, score1, score1_no)
+                    score1 = score1 / (score1 + score1_no)
+    
+    
+    
+                    score_res = score_re + score1
+    
+                    scores_res.append(score_res)
+                
+                score_final = max(scores_res)
+    
+                score_final_all += score_final
+    
+                data[i]['singleimage_question'][j]['clip_retrieval'] = score_re
+                
+    
+    
+            
+            
+    
+    
+            print(score_re, score1, modelname,f'output_video_{i+1}.mp4',question_prompt)
+    
+            data[i]['singleimage_question'][j][modelname] = score_final
+    
+            
+    
+        
+        # only use for two-question
+        if score_final_all <= 1:
+            score_final_all_discrete = 0
+        elif score_final_all <= 1.5 and score_final_all > 1:
+            score_final_all_discrete = 1
+        elif score_final_all <= 2.25 and score_final_all > 1.5:
+            score_final_all_discrete = 2
+        elif score_final_all > 2.25:
+            score_final_all_discrete = 3
+    
+    
+        data[i][f'{modelname}_score'] = score_final_all
+        data[i][f'{modelname}_descrete'] = score_final_all_discrete
+    
+        print(score_final_all_discrete,i)
+        result.append(data[i])
+    
+    print(len(result))
+    
+    with open(f'./PhyGenEval/single/prompt_replace_augment_single_question_{modelname}_res.json','w') as f:
+        json.dump(result,f)
 
 # import os
 # import json

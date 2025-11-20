@@ -383,7 +383,7 @@ if __name__ == "__main__":
     disable_torch_init()
     
 
-    model_path = '/data/llava-model'
+    model_path = '/workspace/llava-next-interleave-qwen-7b'
     model_path = os.path.expanduser(model_path)
     print('model path: ', model_path)
     model_name = get_model_name_from_path(model_path)
@@ -396,11 +396,11 @@ if __name__ == "__main__":
 
     model.eval()
 
-    directory = '/data/'
-   
-    modelnames = ['phygen_w8', 'phygen_ori_w8']
+    directory = '/workspace/'
     
-    with open('/workspace/PhyGenBench/PhyGenBench/explicit_prompts.json','r') as f:
+    modelnames = ['phygen_r20'] #'phygen_w8','phygen_w11', 'phygen_w14', 'phygen_ori_w11', 'phygen_ori_w14'
+    
+    with open('/workspace/PhyGenBench-Test/PhyGenBench/explicit_prompts.json','r') as f:
         explicit_prompt = json.load(f)
 
     for modelname in modelnames:
@@ -409,7 +409,7 @@ if __name__ == "__main__":
 
         pretrix = "Answer me in Format:{'Choice':'Yes or No','Reason':'the reason'} "
         pretrix2 = "If the Image quality is poor, such as blurry images or noticeable distortion, it should answer No."
-        with open(f'/workspace/PhyGenBench/PhyGenEval/multi/prompt_replace_augment_multi_question1_{modelname}_res1_imageclip.json','r') as f:
+        with open(f'/workspace/PhyGenBench-Test/PhyGenEval/multi/prompt_replace_augment_multi_question1_{modelname}_res1_imageclip.json','r') as f:
             data = json.load(f)
         video_directory = os.path.join(directory,modelname)
         for i in range(len(data)):
@@ -425,9 +425,9 @@ if __name__ == "__main__":
             question_prompt3 = explicit_prompt[i]["explicit_caption"]
 
 
-            output_first_image_path = os.path.join(os.path.join('/workspace/PhyGenBench/PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_first.jpg')
-            output_middle_image_path = os.path.join(os.path.join('/workspace/PhyGenBench/PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_middle.jpg')
-            output_last_image_path = os.path.join(os.path.join('/workspace/PhyGenBench/PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_last.jpg')
+            output_first_image_path = os.path.join(os.path.join('/workspace/PhyGenBench-Test/PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_first.jpg')
+            output_middle_image_path = os.path.join(os.path.join('/workspace/PhyGenBench-Test/PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_middle.jpg')
+            output_last_image_path = os.path.join(os.path.join('/workspace/PhyGenBench-Test/PhyGenEval/multi/multiimage_clips1',modelname),f'output_video_{i+1}_last.jpg')
 
             
             if retrieval_prompt == 'Middle Frame':
@@ -543,7 +543,7 @@ if __name__ == "__main__":
                 result.append(data[i])
 
         print(len(result))
-        with open(f'/workspace/PhyGenBench/PhyGenEval/multi/prompt_replace_augment_multi_question_{modelname}_res_llava.json','w') as f:
+        with open(f'/workspace/PhyGenBench-Test/PhyGenEval/multi/prompt_replace_augment_multi_question_{modelname}_res_llava.json','w') as f:
             json.dump(result,f)
 
     
